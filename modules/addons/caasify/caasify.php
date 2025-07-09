@@ -263,8 +263,8 @@ function caasify_clientarea($vars){
         return false;
     }
 
-    $configs = caasify_get_config_decoded();
-    $BackendUrl = $configs['BackendUrl'];
+    $config = caasify_get_config_decoded();
+    $BackendUrl = $config['BackendUrl'];
     if(empty($BackendUrl)){
         echo 'can not find BackendUrl to construct controller <br>';
         return false;
