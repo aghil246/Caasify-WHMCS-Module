@@ -563,7 +563,7 @@ class ClientCaasifyController
 
         $WhUserId = $this->WhUserId;
 
-        if(empty($Ratio) || empty($Chargeamount) || empty($WhUserId) | empty($CaasifyUserId)){
+        if(empty($Ratio) || empty($Chargeamount) || empty($WhUserId) || empty($CaasifyUserId)){
             $message = 'ratio, or amount, or user id is not defined';
             $this->response($message);
             return false;
