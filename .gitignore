@@ -13,6 +13,7 @@
 !caasifyversion.txt
 !caasify.php
 
+
 # modules
 !modules/
 modules/*
@@ -20,13 +21,10 @@ modules/*
 modules/addons/*
 !modules/addons/caasify/
 
+
 !vpspricing.php
 !templates/
 templates/*
 !templates/twenty-one
-templates/twenty-one/*!templates/twenty-one/vpspricing.tpl
-
-# standalone webapp
-!webapp/
-webapp/node_modules/
-webapp/.next/
+templates/twenty-one/*
+!templates/twenty-one/vpspricing.tpl
