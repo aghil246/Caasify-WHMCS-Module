@@ -18,9 +18,9 @@ class RequestTest extends TestCase
     {
         $request = new Request();
 
-        $request->setAddress(['test/test']);
+        $request->setAddress(['api', 'v1', 'test']);
 
-        $this->assertSame('test/test', $request->mergeAddress());
+        $this->assertSame('api/v1/test', $request->mergeAddress());
     }
 
     public function testHeaders()
