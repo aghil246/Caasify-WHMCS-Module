@@ -36,15 +36,3 @@ We as Caasify think that to grasp the difficulties of any job, it's important to
 **WEB:** https://caasify.com/
 
 **Email:** info@caasify.com
-
-## Standalone Webapp
-
-A lightweight standalone webapp built with **Next.js** and **Tailwind CSS** is located in the `webapp` directory. It communicates directly with the Caasify API.
-
-1. Copy `webapp/.env.example` to `webapp/.env` and set your API token.
-2. Run `npm install` inside `webapp`.
-3. Start the dev server with `npm run dev`.
-4. Open `http://localhost:3000` to access the admin dashboard and client portal.
-
-This skeleton demonstrates how to call the Caasify API using `fetch`. Extend it to build a full marketplace experience.
-
