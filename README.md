@@ -47,7 +47,3 @@ A lightweight standalone webapp built with **Next.js** and **Tailwind CSS** is l
 4. Open `http://localhost:3000` to access the admin dashboard and client portal.
 
 This skeleton demonstrates how to call the Caasify API using `fetch`. Extend it to build a full marketplace experience.
-
-Responses from the Caasify API are cached in-memory for one minute to improve
-load times during development.
-
