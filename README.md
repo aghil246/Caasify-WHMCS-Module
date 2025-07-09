@@ -48,3 +48,6 @@ A lightweight standalone webapp built with **Next.js** and **Tailwind CSS** is l
 
 This skeleton demonstrates how to call the Caasify API using `fetch`. Extend it to build a full marketplace experience.
 
+Responses from the Caasify API are cached in-memory for one minute to improve
+load times during development.
+
