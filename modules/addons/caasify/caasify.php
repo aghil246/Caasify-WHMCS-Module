@@ -8,7 +8,7 @@ $path = dirname(__FILE__);
 require_once $path . '/ClientCaasifyController.php';
 require_once $path . '/basics.php';
 
-// Create Table user and order
+// Create user and promotion tables
 function caasify_activate(){
 
     $hasTable = Capsule::schema()->hasTable('tblcaasify_user');
