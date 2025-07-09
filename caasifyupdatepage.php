@@ -85,7 +85,7 @@
             </div>
             <div class="d-flex flex-row justify-content-start align-items-center">
                 <button class="btn btn-outline-info px-3 mx-2" style="width: 200px;" data-bs-toggle="modal" data-bs-target="#actionsmodal" @click="funcDownload" :disabled="ActionIsDoing">Download Module</button>
-                <button class="btn btn-outline-info px-3 mx-2" style="width: 200px;" data-bs-toggle="modal" data-bs-target="#actionsmodal" @click="funcFix" :disabled="ActionIsDoing">Fix Permision</button>
+                <button class="btn btn-outline-info px-3 mx-2" style="width: 200px;" data-bs-toggle="modal" data-bs-target="#actionsmodal" @click="funcFix" :disabled="ActionIsDoing">Fix Permission</button>
             </div>
         </div>
         <div class="col-12 col-lg-6 mt-5 mt-lg-0">
