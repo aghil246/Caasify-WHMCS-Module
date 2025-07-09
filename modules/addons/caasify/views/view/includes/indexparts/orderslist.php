@@ -14,15 +14,21 @@
         </div>
 
         <!-- Has no orders -->
-        <div v-if="OrdersLoaded && activeorders == null">
+        <div v-if="OrdersLoaded && isEmpty(filteredActiveOrders)">
             <p class="fs-5 ps-3 text-danger">
                 {{ lang('noactiveorder') }}
             </p>
         </div>
 
         <!-- show activ orders -->
-        <div v-if="OrdersLoaded && activeorders != null">
-            <table v-if="!isEmpty(activeorders)" class="table table-borderless pb-5 mb-5"
+        <div v-if="OrdersLoaded && !isEmpty(filteredActiveOrders)">
+            <div class="mb-3">
+                <select class="form-select w-auto" v-model="ordersCountryFilter">
+                    <option value="">{{ lang('All Locations') }}</option>
+                    <option v-for="dc in orderDatacenterList" :value="dc">{{ dc }}</option>
+                </select>
+            </div>
+            <table v-if="!isEmpty(paginatedActiveOrders)" class="table table-borderless pb-5 mb-5"
                 style="--bs-table-bg: #ff000000;">
                 <thead>
                     <tr class="border-bottom text-center"
@@ -36,7 +42,7 @@
                     </tr>
                 </thead>
                 <tbody>
-                    <tr class="border-bottom align-middle text-center text-danger" v-for="order in activeorders"
+                    <tr class="border-bottom align-middle text-center text-danger" v-for="order in paginatedActiveOrders"
                         style="--bs-border-width: 1px !important; --bs-border-color: #e1e1e1 !important;">
                         <!-- ID -->
                         <td class="fw-medium">
@@ -89,6 +95,19 @@
                     </tr>
                 </tbody>
             </table>
+            <nav v-if="totalOrderPages > 1" class="mt-3">
+                <ul class="pagination justify-content-center mb-0">
+                    <li class="page-item" :class="{disabled: ordersCurrentPage === 1}">
+                        <a class="page-link" href="#" @click.prevent="changeOrdersPage(ordersCurrentPage-1)">&laquo;</a>
+                    </li>
+                    <li class="page-item" v-for="page in totalOrderPages" :key="page" :class="{active: ordersCurrentPage === page}">
+                        <a class="page-link" href="#" @click.prevent="changeOrdersPage(page)">{{ page }}</a>
+                    </li>
+                    <li class="page-item" :class="{disabled: ordersCurrentPage === totalOrderPages}">
+                        <a class="page-link" href="#" @click.prevent="changeOrdersPage(ordersCurrentPage+1)">&raquo;</a>
+                    </li>
+                </ul>
+            </nav>
             <div class="row justify-content-around px-4" v-else>
                 <div class="d-flex flex-column justify-content-center align-ietms-center text-center mt-5 border rounded p-5 col-12 col-md-5 col-lg-4 border-secondary bg-primary" style="--bs-bg-opacity: 0.1; --bs-border-opacity: 0.1;">
                     <span class="text-dark fs-5 pe-3 mb-3">

@@ -187,6 +187,11 @@ app = createApp({
             DataCentersAreLoaded: false,
             DataCentersLength: 0,
 
+            // cache and pagination
+            ordersCurrentPage: 1,
+            ordersPerPage: 10,
+            ordersCountryFilter: '',
+
             regions: [],
             SelectedRegion: null,
 
@@ -530,6 +535,10 @@ app = createApp({
         SelectedExpenseDate() {
             this.loadExpenses()
         },
+
+        ordersCountryFilter() {
+            this.ordersCurrentPage = 1
+        },
     },
 
     updated() {
@@ -831,6 +840,39 @@ app = createApp({
 
             }
             return listOforders
+        },
+
+        filteredActiveOrders() {
+            let list = this.activeorders
+            if (this.ordersCountryFilter) {
+                list = list.filter(order => {
+                    const rec = order?.records?.[order.records.length - 1]
+                    const cats = rec?.product?.categories
+                    return Array.isArray(cats) && cats[0] === this.ordersCountryFilter
+                })
+            }
+            return list
+        },
+
+        paginatedActiveOrders() {
+            const start = (this.ordersCurrentPage - 1) * this.ordersPerPage
+            return this.filteredActiveOrders.slice(start, start + this.ordersPerPage)
+        },
+
+        totalOrderPages() {
+            return Math.ceil(this.filteredActiveOrders.length / this.ordersPerPage) || 1
+        },
+
+        orderDatacenterList() {
+            const set = new Set()
+            this.activeorders.forEach(order => {
+                const rec = order?.records?.[order.records.length - 1]
+                const cats = rec?.product?.categories
+                if (Array.isArray(cats) && cats.length) {
+                    set.add(cats[0])
+                }
+            })
+            return Array.from(set)
         },
 
         chargeAmountInCaasifyCurrency() {
@@ -1502,6 +1544,17 @@ app = createApp({
         },
 
         async LoadUserOrders() {
+            const cacheKey = 'caasify_user_orders'
+            const cached = localStorage.getItem(cacheKey)
+            if (cached) {
+                const c = JSON.parse(cached)
+                if (Date.now() < c.expiry) {
+                    this.UserOrders = c.data
+                    this.OrdersLoaded = true
+                    return
+                }
+            }
+
             let RequestLink = this.CreateRequestLink(action = 'UserOrders');
             let response = await axios.get(RequestLink);
 
@@ -1511,6 +1564,10 @@ app = createApp({
 
             if (response?.data?.data) {
                 this.UserOrders = response?.data?.data;
+                localStorage.setItem(cacheKey, JSON.stringify({
+                    data: this.UserOrders,
+                    expiry: Date.now() + 60 * 1000
+                }))
             } else if (response?.data?.message) {
                 console.error(response?.data?.message);
             } else {
@@ -2388,6 +2445,19 @@ app = createApp({
         async loadDataCenters() {
             this.DataCentersAreLoaded = false
 
+            const cacheKey = 'caasify_datacenters'
+            const cached = localStorage.getItem(cacheKey)
+            if (cached) {
+                const c = JSON.parse(cached)
+                if (Date.now() < c.expiry) {
+                    this.DataCenters = c.data
+                    this.DataCentersLength = c.data.length
+                    this.DataCentersAreLoaded = true
+                    this.plansAreLoaded = false
+                    return
+                }
+            }
+
             RequestLink = this.CreateRequestLink(action = 'CaasifyGetDataCenters');
             let response = await axios.get(RequestLink);
 
@@ -2408,6 +2478,10 @@ app = createApp({
                 this.DataCentersAreLoaded = true
                 this.plansAreLoaded = false
                 this.DataCenters = response?.data?.data
+                localStorage.setItem(cacheKey, JSON.stringify({
+                    data: this.DataCenters,
+                    expiry: Date.now() + 10 * 60 * 1000
+                }))
             }
         },
 
@@ -2523,6 +2597,18 @@ app = createApp({
             this.plans = [];
 
             if (this.SelectedRegion?.id) {
+                const cacheKey = 'caasify_plans_' + this.SelectedRegion.id
+                const cached = localStorage.getItem(cacheKey)
+                if (cached) {
+                    const c = JSON.parse(cached)
+                    if (Date.now() < c.expiry) {
+                        this.plans = c.data
+                        this.plansAreLoading = false
+                        this.plansAreLoaded = true
+                        return
+                    }
+                }
+
                 let formData = new FormData();
                 formData.append('CategoryID', this.SelectedRegion?.id);
                 RequestLink = this.CreateRequestLink(action = 'CaasifyGetPlans');
@@ -2538,6 +2624,10 @@ app = createApp({
                     this.plansAreLoading = false;
                     this.plansAreLoaded = true;
                     this.plans = response?.data?.data
+                    localStorage.setItem(cacheKey, JSON.stringify({
+                        data: this.plans,
+                        expiry: Date.now() + 10 * 60 * 1000
+                    }))
                 }
             }
         },
@@ -3074,6 +3164,12 @@ app = createApp({
                 return true
             } else {
                 return false
+            }
+        },
+
+        changeOrdersPage(page) {
+            if (page >= 1 && page <= this.totalOrderPages) {
+                this.ordersCurrentPage = page
             }
         },
 
