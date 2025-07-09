@@ -187,6 +187,11 @@ app = createApp({
             DataCentersAreLoaded: false,
             DataCentersLength: 0,
 
+            // cache and pagination
+            ordersCurrentPage: 1,
+            ordersPerPage: 10,
+            ordersCountryFilter: '',
+
             regions: [],
             SelectedRegion: null,
 
@@ -530,6 +535,10 @@ app = createApp({
         SelectedExpenseDate() {
             this.loadExpenses()
         },
+
+        ordersCountryFilter() {
+            this.ordersCurrentPage = 1
+        },
     },
 
     updated() {
@@ -833,6 +842,39 @@ app = createApp({
             return listOforders
         },
 
+        filteredActiveOrders() {
+            let list = this.activeorders
+            if (this.ordersCountryFilter) {
+                list = list.filter(order => {
+                    const rec = order?.records?.[order.records.length - 1]
+                    const cats = rec?.product?.categories
+                    return Array.isArray(cats) && cats[0] === this.ordersCountryFilter
+                })
+            }
+            return list
+        },
+
+        paginatedActiveOrders() {
+            const start = (this.ordersCurrentPage - 1) * this.ordersPerPage
+            return this.filteredActiveOrders.slice(start, start + this.ordersPerPage)
+        },
+
+        totalOrderPages() {
+            return Math.ceil(this.filteredActiveOrders.length / this.ordersPerPage) || 1
+        },
+
+        orderDatacenterList() {
+            const set = new Set()
+            this.activeorders.forEach(order => {
+                const rec = order?.records?.[order.records.length - 1]
+                const cats = rec?.product?.categories
+                if (Array.isArray(cats) && cats.length) {
+                    set.add(cats[0])
+                }
+            })
+            return Array.from(set)
+        },
+
         chargeAmountInCaasifyCurrency() {
             if (this.chargeAmountinWhmcs != null && this.CurrenciesRatioWhmcsToCloud != null) {
                 let value = this.convertFromWhmcsToCloud(this.chargeAmountinWhmcs)
@@ -1082,6 +1124,32 @@ app = createApp({
             }
 
             this.findValidControllers();
+        },
+
+        getCache(key) {
+            try {
+                const raw = localStorage.getItem(key)
+                if (raw) {
+                    const obj = JSON.parse(raw)
+                    if (Date.now() < obj.expiry) {
+                        return obj.data
+                    }
+                }
+            } catch (e) {
+                console.error('cache read error', e)
+            }
+            return null
+        },
+
+        setCache(key, data, ttlMs) {
+            try {
+                localStorage.setItem(key, JSON.stringify({
+                    data: data,
+                    expiry: Date.now() + ttlMs
+                }))
+            } catch (e) {
+                console.error('cache write error', e)
+            }
         },
 
         orderTypeClass(type){
@@ -1502,6 +1570,14 @@ app = createApp({
         },
 
         async LoadUserOrders() {
+            const cacheKey = 'caasify_user_orders'
+            const cached = this.getCache(cacheKey)
+            if (cached) {
+                this.UserOrders = cached
+                this.OrdersLoaded = true
+                return
+            }
+
             let RequestLink = this.CreateRequestLink(action = 'UserOrders');
             let response = await axios.get(RequestLink);
 
@@ -1511,6 +1587,7 @@ app = createApp({
 
             if (response?.data?.data) {
                 this.UserOrders = response?.data?.data;
+                this.setCache(cacheKey, this.UserOrders, 5 * 60 * 1000)
             } else if (response?.data?.message) {
                 console.error(response?.data?.message);
             } else {
@@ -2388,6 +2465,16 @@ app = createApp({
         async loadDataCenters() {
             this.DataCentersAreLoaded = false
 
+            const cacheKey = 'caasify_datacenters'
+            const cached = this.getCache(cacheKey)
+            if (cached) {
+                this.DataCenters = cached
+                this.DataCentersLength = cached.length
+                this.DataCentersAreLoaded = true
+                this.plansAreLoaded = false
+                return
+            }
+
             RequestLink = this.CreateRequestLink(action = 'CaasifyGetDataCenters');
             let response = await axios.get(RequestLink);
 
@@ -2408,6 +2495,7 @@ app = createApp({
                 this.DataCentersAreLoaded = true
                 this.plansAreLoaded = false
                 this.DataCenters = response?.data?.data
+                this.setCache(cacheKey, this.DataCenters, 10 * 60 * 1000)
             }
         },
 
@@ -2523,6 +2611,15 @@ app = createApp({
             this.plans = [];
 
             if (this.SelectedRegion?.id) {
+                const cacheKey = 'caasify_plans_' + this.SelectedRegion.id
+                const cached = this.getCache(cacheKey)
+                if (cached) {
+                    this.plans = cached
+                    this.plansAreLoading = false
+                    this.plansAreLoaded = true
+                    return
+                }
+
                 let formData = new FormData();
                 formData.append('CategoryID', this.SelectedRegion?.id);
                 RequestLink = this.CreateRequestLink(action = 'CaasifyGetPlans');
@@ -2538,6 +2635,7 @@ app = createApp({
                     this.plansAreLoading = false;
                     this.plansAreLoaded = true;
                     this.plans = response?.data?.data
+                    this.setCache(cacheKey, this.plans, 10 * 60 * 1000)
                 }
             }
         },
@@ -3074,6 +3172,12 @@ app = createApp({
                 return true
             } else {
                 return false
+            }
+        },
+
+        changeOrdersPage(page) {
+            if (page >= 1 && page <= this.totalOrderPages) {
+                this.ordersCurrentPage = page
             }
         },
 
@@ -3894,5 +3998,4 @@ app = createApp({
 });
 
 app.config.compilerOptions.isCustomElement = tag => tag === 'btn'
-app.config.devtools = true;
-app.mount('#app') 
+app.config.devtools = true;app.mount('#app') 
